@@ -1,43 +1,24 @@
-'use strict';
+import sequelize from '../config/database.js';
+import User from './User.js';
+import Author from './Author.js';
+import Category from './Category.js';
+import Article from './Article.js';
+import Comment from './Comment.js';
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
+// Relations
+Category.hasMany(Article, { foreignKey: 'categoryId', as: 'articles' });
+Article.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+Author.hasMany(Article, { foreignKey: 'authorId', as: 'articles' });
+Article.belongsTo(Author, { foreignKey: 'authorId', as: 'author' });
 
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
+User.hasMany(Article, { foreignKey: 'userId', as: 'articles' });
+Article.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+Article.hasMany(Comment, { foreignKey: 'articleId', as: 'comments', onDelete: 'CASCADE' });
+Comment.belongsTo(Article, { foreignKey: 'articleId', as: 'article' });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+User.hasMany(Comment, { foreignKey: 'userId', as: 'comments' });
+Comment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-module.exports = db;
+export { sequelize, User, Author, Category, Article, Comment };
